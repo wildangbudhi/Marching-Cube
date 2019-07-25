@@ -134,7 +134,7 @@ void March(	const double * Pixel_Array,
 		ZCoor += ZDist;
 	}
 
-	cout << " Start Calculate Normal " << endl;
+	cout << "Start Calculate Normal " << endl;
 	CalculateNormal(mesh);
 }
 
