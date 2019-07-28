@@ -11,21 +11,27 @@ using namespace std;
 
 struct Coor
 {
-	double x, y, z;
+	long double x, y, z;
 	bool operator==(const Coor& p) const { return (x == p.x) && (y == p.y) && (z == p.z); }
+	void normalization() {
+		long double sum = sqrtl((x*x) + (y*y) + (z*z));
+		x /= sum; 
+		y /= sum; 
+		z /= sum;
+	}
 };
 
 struct Coor_Hash_Func
 {
 	size_t operator() (const Coor& p) const
 	{
-		return hash<double>()(p.x) ^ hash<double>()(p.y) ^ hash<double>()(p.z);
+		return hash<long double>()(p.x) ^ hash<long double>()(p.y) ^ hash <long double> ()(p.z);
 	}
 };
 
 struct Mesh
 {
 	vector<Coor> Vertex;
-	vector<Coor> VertexNormal;
+	vector<pair<Coor, size_t> > VertexNormal;
 	vector<vector<size_t> > Faces;
 };

@@ -16,18 +16,18 @@ void VertexInterp(size_t Threshold, Coor p1, Coor p2, double pv1, double pv2, si
 void CalculateNormal(Mesh & mesh)
 {
 	for (size_t i = 0; i < mesh.Vertex.size(); i++)
-		mesh.VertexNormal.push_back({ 0,0,1 });
+		mesh.VertexNormal.push_back({ { 0,0,1 } , 0});
 
 	#pragma omp parallel for
 	for (long long int i = 0; i < mesh.Faces.size(); i++)
 	{
 
 		// a = p2 - p1; b = p3 - p1
-		Coor a = { mesh.Vertex[mesh.Faces[i][1]].x - mesh.Vertex[mesh.Faces[i][0]].x,
+		Coor a = {	mesh.Vertex[mesh.Faces[i][1]].x - mesh.Vertex[mesh.Faces[i][0]].x,
 					mesh.Vertex[mesh.Faces[i][1]].y - mesh.Vertex[mesh.Faces[i][0]].y,
 					mesh.Vertex[mesh.Faces[i][1]].z - mesh.Vertex[mesh.Faces[i][0]].z };
 
-		Coor b = { mesh.Vertex[mesh.Faces[i][2]].x - mesh.Vertex[mesh.Faces[i][0]].x,
+		Coor b = {	mesh.Vertex[mesh.Faces[i][2]].x - mesh.Vertex[mesh.Faces[i][0]].x,
 					mesh.Vertex[mesh.Faces[i][2]].y - mesh.Vertex[mesh.Faces[i][0]].y,
 					mesh.Vertex[mesh.Faces[i][2]].z - mesh.Vertex[mesh.Faces[i][0]].z };
 
@@ -36,11 +36,30 @@ void CalculateNormal(Mesh & mesh)
 					(a.z * b.x) - (a.x * b.z),
 					(a.x * b.y) - (a.x * b.y) };
 
-		// Normalisasi
-		double sum = sqrt((N.x * N.x) + (N.y * N.y) + (N.z * N.z));
-		N = { N.x / sum, N.y / sum, N.z / sum };
+		// Normalization
+		N.normalization();
 
-		mesh.VertexNormal[mesh.Faces[i][0]] = mesh.VertexNormal[mesh.Faces[i][1]] = mesh.VertexNormal[mesh.Faces[i][2]] = N;
+		// Combine Normal
+		for (int j = 0; j < 3; j++)
+		{
+			size_t SizeTemp;
+			if ((SizeTemp = mesh.VertexNormal[mesh.Faces[i][j]].second) == 0)
+				mesh.VertexNormal[mesh.Faces[i][j]] = { N, SizeTemp + 1 };
+			else
+			{
+				// Mean of Vertex Normal
+				Coor temp = mesh.VertexNormal[mesh.Faces[i][j]].first;
+				N = {	((SizeTemp * temp.x) + (N.x)) / (SizeTemp + 1)	,
+						((SizeTemp * temp.y) + (N.y)) / (SizeTemp + 1)	,
+						((SizeTemp * temp.z) + (N.z)) / (SizeTemp + 1)	,
+					};
+
+				// Normalization
+				N.normalization();
+
+				mesh.VertexNormal[mesh.Faces[i][j]] = { N, SizeTemp + 1 };
+			}
+		}
 	}
 
 }
@@ -76,11 +95,13 @@ void Polygonise(vector<double>& PointValues, double x1, double y1, double z1, do
 		
 		for (int j = 0; j < 3; j++)
 		{
-			size_t a;
-			if ( a = verts[ vertlist[ TRIANGLE_TABLE[cubeIndex][i + j] ] ] ) v[j] = a;
+			if (verts.count(vertlist[TRIANGLE_TABLE[cubeIndex][i + j]]))
+			{
+				v[j] = verts[vertlist[TRIANGLE_TABLE[cubeIndex][i + j]]];
+			}
 			else 
 			{
-				v[j] = verts.size();
+				v[j] = verts.size() + 1;
 				verts[ vertlist[ TRIANGLE_TABLE[cubeIndex][i + j] ] ] = v[j];
 				mesh.Vertex.push_back( vertlist[ TRIANGLE_TABLE[cubeIndex][i + j] ] );
 			}
@@ -142,7 +163,7 @@ void MakeOBJ(const char * name, Mesh & mesh)
 {
 	FILE *f1 = fopen(name, "w");
 
-	fprintf(f1, "# OBJ from MarchigCube by Wildan G. Budhi\n");
+	fprintf(f1, "# OBJ from MarchigCube by 3D BAMAG\n");
 
 	fprintf(f1, "\n# List of geometric vertices\n");
 	for (size_t i = 0; i < mesh.Vertex.size(); i++)
@@ -150,12 +171,11 @@ void MakeOBJ(const char * name, Mesh & mesh)
 
 	fprintf(f1, "\n# List of vertex normals\n");
 	for (size_t i = 0; i < mesh.VertexNormal.size(); i++) 
-		fprintf(f1, "vn %lf %lf %lf\n", mesh.VertexNormal[i].x, mesh.VertexNormal[i].y, mesh.VertexNormal[i].z);
+		fprintf(f1, "vn %Lf %Lf %Lf\n", mesh.VertexNormal[i].first.x, mesh.VertexNormal[i].first.y, mesh.VertexNormal[i].first.z);
 
 	fprintf(f1, "\n# Polygonal face element\n");
 	for (size_t i = 0; i < mesh.Faces.size(); i++) 
-		fprintf(f1, "f %lld %lld %lld\n", mesh.Faces[i][0], mesh.Faces[i][1], mesh.Faces[i][2]);
+		fprintf(f1, "f %lld//%lld %lld//%lld %lld//%lld\n", mesh.Faces[i][0], mesh.Faces[i][0], mesh.Faces[i][1], mesh.Faces[i][1], mesh.Faces[i][2], mesh.Faces[i][2]);
 
 	fclose(f1);
-
 }
