@@ -29,32 +29,9 @@ def Make3D(DicomSeriesPath: str, DicomType: str, Threshold: int = 400):
 	print("Sukses:", time() - start)
 
 def main():
-	#Make3D("D:/Python/3D Brain/Editing Code/Azis/Azis CT Scan/A/", "CT Scan", Threshold=400)
-
-	print("read obj")
-	obj = vtk.vtkOBJReader()
-	obj.SetFileName("MRA.obj")
-	obj.Update()
-
-	print("Smoothing")
-	smooth = vtk.vtkSmoothPolyDataFilter()
-	smooth.SetInputConnection(obj.GetOutputPort())
-	smooth.SetNumberOfIterations(15)
-	smooth.SetRelaxationFactor(1)
-	smooth.FeatureEdgeSmoothingOff()
-    #smoothFilter.FeatureEdgeSmoothingOn()
-	smooth.BoundarySmoothingOff()
-    #smoothFilter.BoundarySmoothingOff()
-	smooth.Update()
-
-	print("Make OBJ")
-	obj = vtk.vtkOBJWriter()
-	obj.SetInputConnection(smooth.GetOutputPort())
-	obj.SetFileName("Smooth CT Scan.obj")
-	obj.Write()
-
-	#Make3D("D:/Python/3D Brain/Editing Code/Azis/Azis MRI/A/", "MRI", Threshold=400)
-	#Make3D("D:/Python/3D Brain/Editing Code/Azis/Azis MRA & DTI/501/", "MRA", Threshold=1000)
+	Make3D("D:/Python/3D Brain/Editing Code/Azis/Azis CT Scan/A/", "CT Scan", Threshold=400)
+	Make3D("D:/Python/3D Brain/Editing Code/Azis/Azis MRI/A/", "MRI", Threshold=400)
+	Make3D("D:/Python/3D Brain/Editing Code/Azis/Azis MRA & DTI/501/", "MRA", Threshold=1000)
 
 if __name__ == "__main__":
 	main()

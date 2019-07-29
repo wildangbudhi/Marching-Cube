@@ -13,7 +13,8 @@ struct Coor
 {
 	long double x, y, z;
 	bool operator==(const Coor& p) const { return (x == p.x) && (y == p.y) && (z == p.z); }
-	void normalization() {
+	void normalization() 
+	{
 		long double sum = sqrtl((x*x) + (y*y) + (z*z));
 		x /= sum; 
 		y /= sum; 
