@@ -28,7 +28,7 @@ MarchingCube(	py::array_t<double> pixel_array,
 	Mesh mesh;
 	March((double *) rA.ptr, rA.shape[0], rA.shape[1], rA.shape[2], ZDist, YDist, XDist, trs, mesh);
 	cout << "Smoothing Start" << endl;
-	Smoothing(mesh, 1);
+	Smoothing(mesh, 2);
 	cout << "Make OBJ Start" << endl;
 	MakeOBJ(name, mesh);
 }

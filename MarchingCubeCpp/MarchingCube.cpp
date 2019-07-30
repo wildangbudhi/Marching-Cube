@@ -1,10 +1,32 @@
 #include "MarchingCube.h"
 
+long double GetValueFromTrilinearInterpolation(Coor V, long double V0[])
+{
+/*	Vxyz =	V000(1 - x) (1 - y) (1 - z) +
+			V100 x(1 - y) (1 - z) +
+			V010(1 - x) y(1 - z) +
+			V001(1 - x) (1 - y) z +
+			V101 x(1 - y) z +
+			V011(1 - x) y z +
+			V110 x y(1 - z) +
+			V111 x y z		*/
+	
+	return 	(V0[0] * (1 - V.x) * (1 - V.y) * (1 - V.z)) +
+			(V0[1] * V.x * (1 - V.y) * (1 - V.z)) +
+			(V0[2] * (1 - V.x) * V.y *(1 - V.z)) +
+			(V0[3] * (1 - V.x) * (1 - V.y) * V.z) +
+			(V0[4] * V.x * (1 - V.y) * V.z) +
+			(V0[5] * (1 - V.x) * V.y * V.z) +
+			(V0[6] * V.x * V.y *(1 - V.z)) +
+			(V0[7] * V.x * V.y * V.z);
+
+}
+
 void VertexInterp(size_t Threshold, Coor p1, Coor p2, double pv1, double pv2, size_t resultIndex, vector<Coor>& result)
 {
-	if (abs(Threshold - pv1) < 0.00001) result[resultIndex] = p1;
-	if (abs(Threshold - pv2) < 0.00001) result[resultIndex] = p2;
-	if (abs(pv1 - pv2) < 0.00001) result[resultIndex] = p1;
+	if (fabs(Threshold - pv1) < 0.00001) result[resultIndex] = p1;
+	if (fabs(Threshold - pv2) < 0.00001) result[resultIndex] = p2;
+	if (fabs(pv1 - pv2) < 0.00001) result[resultIndex] = p1;
 
 	double mu = (Threshold - pv1) / (pv1 - pv2);
 
@@ -64,7 +86,7 @@ void CalculateNormal(Mesh & mesh)
 
 }
 
-void Polygonise(vector<double>& PointValues, double x1, double y1, double z1, double x2, double y2, double z2, size_t Threshold, unordered_map<Coor, size_t, Coor_Hash_Func>& verts, Mesh& mesh)
+void Polygonise(vector<long double>& PointValues, double x1, double y1, double z1, double x2, double y2, double z2, size_t Threshold, unordered_map<Coor, size_t, Coor_Hash_Func>& verts, Mesh& mesh)
 {
 	size_t cubeIndex = 0;
 	int shifter = 1;
@@ -114,7 +136,7 @@ void Polygonise(vector<double>& PointValues, double x1, double y1, double z1, do
 
 void March(	const double * Pixel_Array, 
 			const size_t ZSize, const size_t YSize, const size_t XSize, 
-			const double ZDist, const double YDist, const double XDist,
+			double ZDist, double YDist, double XDist,
 			long long int Threshold,
 			Mesh& mesh
 		)
@@ -125,30 +147,55 @@ void March(	const double * Pixel_Array,
 	double ZCoor = 0.0, YCoor, XCoor;
 	unordered_map<Coor, size_t, Coor_Hash_Func> verts;
 
+	XDist /= 2.0;
+	YDist /= 2.0;
+	ZDist /= 2.0;
+
 	//#pragma omp parallel for
-	for (int z = 0; z < (ZSize - 1); z++)
+	for (long double z = 0.0; z < (long double) (ZSize - 1); z += 0.5)
 	{
 		YCoor = 0.0;
-		for (int y = 0; y < (YSize - 1); y++)
+		for (long double y = 0.0; y < (long double) (YSize - 1); y += 0.5)
 		{
 			XCoor = 0.0;
-			for (int x = 0; x < (XSize - 1); x++)
+			for (long double x = 0.0; x < (long double) (XSize - 1); x += 0.5)
 			{
-				vector<double> PointValue	{
-												Pixel_Array[z * xyWidth + y * xWidth + x], 
-												Pixel_Array[z * xyWidth + (y + 1) * xWidth + x],
-												Pixel_Array[z * xyWidth + (y + 1) * xWidth + (x + 1)],
-												Pixel_Array[z * xyWidth + y * xWidth + (x + 1)],
-												Pixel_Array[(z + 1) * xyWidth + y * xWidth + x],
-												Pixel_Array[(z + 1) * xyWidth + (y + 1) * xWidth + x],
-												Pixel_Array[(z + 1) * xyWidth + (y + 1) * xWidth + x + 1],
-												Pixel_Array[(z + 1) * xyWidth + y * xWidth, (x + 1)]
+				//vector<long double> PointValue	{
+													//Pixel_Array[z * xyWidth + y * xWidth + x], 
+													//Pixel_Array[z * xyWidth + (y + 1) * xWidth + x],
+													//Pixel_Array[z * xyWidth + (y + 1) * xWidth + (x + 1)],
+													//Pixel_Array[z * xyWidth + y * xWidth + (x + 1)],
+													//Pixel_Array[(z + 1) * xyWidth + y * xWidth + x],
+													//Pixel_Array[(z + 1) * xyWidth + (y + 1) * xWidth + x],
+													//Pixel_Array[(z + 1) * xyWidth + (y + 1) * xWidth + x + 1],
+													//Pixel_Array[(z + 1) * xyWidth + y * xWidth, (x + 1)]
+												//};
+				long double PointValue[] =	{
+												Pixel_Array[(int) z * xyWidth + (int) (y + 0.5) * xWidth + (int) x],
+												Pixel_Array[(int) z * xyWidth + (int) (y + 0.5) * xWidth + (int) (x + 0.5)],
+												Pixel_Array[(int) (z + 0.5) * xyWidth + (int) (y + 0.5) * xWidth + (int) x],
+												Pixel_Array[(int) z * xyWidth + (int) y * xWidth + (int) x],
+												Pixel_Array[(int) z * xyWidth + (int) y * xWidth + (int) (x + 0.5)],
+												Pixel_Array[(int) z * xyWidth + (int) (y + 0.5) * xWidth + (int) x],
+												Pixel_Array[(int) (z + 0.5) * xyWidth + (int) (y + 0.5) * xWidth + (int) (x + 0.5)],
+												Pixel_Array[(int) (z + 0.5) * xyWidth + (int) y * xWidth, (int) (x + 0.5)]
 											};
 
-				Polygonise(PointValue, XCoor, YCoor, ZCoor, XCoor + XDist, YCoor + YDist, ZCoor + ZDist, Threshold, verts, mesh);
+				vector<long double> PointValues	{
+													GetValueFromTrilinearInterpolation({x, y, z}, PointValue),
+													GetValueFromTrilinearInterpolation({z , y + 0.5, x}, PointValue),
+													GetValueFromTrilinearInterpolation({x + 0.5, y + 0.5, z}, PointValue),
+													GetValueFromTrilinearInterpolation({x + 0.5, y, z}, PointValue),
+													GetValueFromTrilinearInterpolation({x, y, z + 0.5}, PointValue),
+													GetValueFromTrilinearInterpolation({x, y + 0.5, z + 0.5}, PointValue),
+													GetValueFromTrilinearInterpolation({x + 0.5, y + 0.5, z + 0.5}, PointValue),
+													GetValueFromTrilinearInterpolation({x + 0.5, y, z + 0.5}, PointValue)
+												};
+
+				Polygonise(PointValues, XCoor, YCoor, ZCoor, XCoor + XDist, YCoor + YDist, ZCoor + ZDist, Threshold, verts, mesh);
 
 				XCoor += XDist;
-				PointValue.erase(PointValue.begin(), PointValue.end());
+				PointValues.erase(PointValues.begin(), PointValues.end());
 			}
 			YCoor += YDist;
 		}
