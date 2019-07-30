@@ -146,31 +146,31 @@ void March(	const double * Pixel_Array,
 
 	double ZCoor = 0.0, YCoor, XCoor;
 	unordered_map<Coor, size_t, Coor_Hash_Func> verts;
-
+/*
 	XDist /= 2.0;
 	YDist /= 2.0;
-	ZDist /= 2.0;
+	ZDist /= 2.0;*/
 
 	//#pragma omp parallel for
-	for (long double z = 0.0; z < (long double) (ZSize - 1); z += 0.5)
+	for (int z = 0; z < (ZSize - 1); z++)
 	{
 		YCoor = 0.0;
-		for (long double y = 0.0; y < (long double) (YSize - 1); y += 0.5)
+		for (int y = 0; y < (YSize - 1); y++)
 		{
 			XCoor = 0.0;
-			for (long double x = 0.0; x < (long double) (XSize - 1); x += 0.5)
+			for (int x = 0; x < (XSize - 1); x++)
 			{
-				//vector<long double> PointValue	{
-													//Pixel_Array[z * xyWidth + y * xWidth + x], 
-													//Pixel_Array[z * xyWidth + (y + 1) * xWidth + x],
-													//Pixel_Array[z * xyWidth + (y + 1) * xWidth + (x + 1)],
-													//Pixel_Array[z * xyWidth + y * xWidth + (x + 1)],
-													//Pixel_Array[(z + 1) * xyWidth + y * xWidth + x],
-													//Pixel_Array[(z + 1) * xyWidth + (y + 1) * xWidth + x],
-													//Pixel_Array[(z + 1) * xyWidth + (y + 1) * xWidth + x + 1],
-													//Pixel_Array[(z + 1) * xyWidth + y * xWidth, (x + 1)]
-												//};
-				long double PointValue[] =	{
+				vector<long double> PointValues	{
+													Pixel_Array[z * xyWidth + y * xWidth + x], 
+													Pixel_Array[z * xyWidth + (y + 1) * xWidth + x],
+													Pixel_Array[z * xyWidth + (y + 1) * xWidth + (x + 1)],
+													Pixel_Array[z * xyWidth + y * xWidth + (x + 1)],
+													Pixel_Array[(z + 1) * xyWidth + y * xWidth + x],
+													Pixel_Array[(z + 1) * xyWidth + (y + 1) * xWidth + x],
+													Pixel_Array[(z + 1) * xyWidth + (y + 1) * xWidth + x + 1],
+													Pixel_Array[(z + 1) * xyWidth + y * xWidth, (x + 1)]
+												};
+				/*long double PointValue[] =	{
 												Pixel_Array[(int) z * xyWidth + (int) (y + 0.5) * xWidth + (int) x],
 												Pixel_Array[(int) z * xyWidth + (int) (y + 0.5) * xWidth + (int) (x + 0.5)],
 												Pixel_Array[(int) (z + 0.5) * xyWidth + (int) (y + 0.5) * xWidth + (int) x],
@@ -190,7 +190,7 @@ void March(	const double * Pixel_Array,
 													GetValueFromTrilinearInterpolation({x, y + 0.5, z + 0.5}, PointValue),
 													GetValueFromTrilinearInterpolation({x + 0.5, y + 0.5, z + 0.5}, PointValue),
 													GetValueFromTrilinearInterpolation({x + 0.5, y, z + 0.5}, PointValue)
-												};
+												};*/
 
 				Polygonise(PointValues, XCoor, YCoor, ZCoor, XCoor + XDist, YCoor + YDist, ZCoor + ZDist, Threshold, verts, mesh);
 
