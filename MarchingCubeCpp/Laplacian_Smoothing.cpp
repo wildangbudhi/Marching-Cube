@@ -10,9 +10,9 @@ void Swap(T& a, T&b)
 
 void AdjList(Mesh & mesh, vector<set<size_t>> & Adj)
 {
-	Adj.resize(mesh.Vertex.size() , set<size_t>());
+	Adj.resize(mesh.Vertex.size(), set<size_t>());
 
-	#pragma omp parallel for
+#pragma omp parallel for
 	for (long long int i = 0; i < mesh.Faces.size(); i++)
 	{
 		size_t a = mesh.Faces[i][0] - 1;
@@ -35,13 +35,13 @@ void Smoothing(Mesh & mesh, size_t rounds)
 	AdjList(mesh, Adj);
 
 	vector<Coor> new_verts(mesh.Vertex.size());
-	vector<pair<Coor, size_t> > new_norms(mesh.Vertex.size(), { {0.0, 0.0, 0.0} , 0});
+	vector<pair<Coor, size_t> > new_norms(mesh.Vertex.size(), { {0.0, 0.0, 0.0} , 0 });
 
 	cout << "Smoothing Start" << endl;
 
 	for (size_t i = 0; i < rounds; i++)
 	{
-		#pragma omp parallel for
+#pragma omp parallel for
 		for (long long int vert = 0; vert < mesh.Vertex.size(); vert++)
 		{
 			// x

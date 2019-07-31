@@ -2,15 +2,15 @@
 
 long double GetValueFromTrilinearInterpolation(Coor V, long double V0[])
 {
-/*	Vxyz =	V000(1 - x) (1 - y) (1 - z) +
-			V100 x(1 - y) (1 - z) +
-			V010(1 - x) y(1 - z) +
-			V001(1 - x) (1 - y) z +
-			V101 x(1 - y) z +
-			V011(1 - x) y z +
-			V110 x y(1 - z) +
-			V111 x y z		*/
-	
+	/*	Vxyz =	V000(1 - x) (1 - y) (1 - z) +
+				V100 x(1 - y) (1 - z) +
+				V010(1 - x) y(1 - z) +
+				V001(1 - x) (1 - y) z +
+				V101 x(1 - y) z +
+				V011(1 - x) y z +
+				V110 x y(1 - z) +
+				V111 x y z		*/
+
 	return 	(V0[0] * (1 - V.x) * (1 - V.y) * (1 - V.z)) +
 			(V0[1] * V.x * (1 - V.y) * (1 - V.z)) +
 			(V0[2] * (1 - V.x) * V.y *(1 - V.z)) +
@@ -30,26 +30,26 @@ void VertexInterp(size_t Threshold, Coor p1, Coor p2, double pv1, double pv2, si
 
 	double mu = (Threshold - pv1) / (pv1 - pv2);
 
-	result[resultIndex] = { (p1.x + mu * (p2.x - p1.x)), 
-							(p1.y + mu * (p2.y - p1.y)), 
-							(p1.z + mu * (p2.z - p1.z))	};
+	result[resultIndex] = { (p1.x + mu * (p2.x - p1.x)),
+							(p1.y + mu * (p2.y - p1.y)),
+							(p1.z + mu * (p2.z - p1.z)) };
 }
 
 void CalculateNormal(Mesh & mesh)
 {
 	for (size_t i = 0; i < mesh.Vertex.size(); i++)
-		mesh.VertexNormal.push_back({ { 0,0,1 } , 0});
+		mesh.VertexNormal.push_back({ { 0,0,1 } , 0 });
 
 	#pragma omp parallel for
 	for (long long int i = 0; i < mesh.Faces.size(); i++)
 	{
 
 		// a = p2 - p1; b = p3 - p1
-		Coor a = {	mesh.Vertex[mesh.Faces[i][1]].x - mesh.Vertex[mesh.Faces[i][0]].x,
+		Coor a = { mesh.Vertex[mesh.Faces[i][1]].x - mesh.Vertex[mesh.Faces[i][0]].x,
 					mesh.Vertex[mesh.Faces[i][1]].y - mesh.Vertex[mesh.Faces[i][0]].y,
 					mesh.Vertex[mesh.Faces[i][1]].z - mesh.Vertex[mesh.Faces[i][0]].z };
 
-		Coor b = {	mesh.Vertex[mesh.Faces[i][2]].x - mesh.Vertex[mesh.Faces[i][0]].x,
+		Coor b = { mesh.Vertex[mesh.Faces[i][2]].x - mesh.Vertex[mesh.Faces[i][0]].x,
 					mesh.Vertex[mesh.Faces[i][2]].y - mesh.Vertex[mesh.Faces[i][0]].y,
 					mesh.Vertex[mesh.Faces[i][2]].z - mesh.Vertex[mesh.Faces[i][0]].z };
 
@@ -71,10 +71,10 @@ void CalculateNormal(Mesh & mesh)
 			{
 				// Mean of Vertex Normal
 				Coor temp = mesh.VertexNormal[mesh.Faces[i][j]].first;
-				N = {	((SizeTemp * temp.x) + (N.x)) / (SizeTemp + 1)	,
+				N = { ((SizeTemp * temp.x) + (N.x)) / (SizeTemp + 1)	,
 						((SizeTemp * temp.y) + (N.y)) / (SizeTemp + 1)	,
 						((SizeTemp * temp.z) + (N.z)) / (SizeTemp + 1)	,
-					};
+				};
 
 				// Normalization
 				N.normalization();
@@ -114,18 +114,18 @@ void Polygonise(vector<long double>& PointValues, double x1, double y1, double z
 	for (size_t i = 0; TRIANGLE_TABLE[cubeIndex][i] != -1; i += 3)
 	{
 		size_t v[3];
-		
+
 		for (int j = 0; j < 3; j++)
 		{
 			if (verts.count(vertlist[TRIANGLE_TABLE[cubeIndex][i + j]]))
 			{
 				v[j] = verts[vertlist[TRIANGLE_TABLE[cubeIndex][i + j]]];
 			}
-			else 
+			else
 			{
 				v[j] = verts.size() + 1;
-				verts[ vertlist[ TRIANGLE_TABLE[cubeIndex][i + j] ] ] = v[j];
-				mesh.Vertex.push_back( vertlist[ TRIANGLE_TABLE[cubeIndex][i + j] ] );
+				verts[vertlist[TRIANGLE_TABLE[cubeIndex][i + j]]] = v[j];
+				mesh.Vertex.push_back(vertlist[TRIANGLE_TABLE[cubeIndex][i + j]]);
 			}
 		}
 
@@ -134,24 +134,24 @@ void Polygonise(vector<long double>& PointValues, double x1, double y1, double z
 
 }
 
-void March(	const double * Pixel_Array, 
-			const size_t ZSize, const size_t YSize, const size_t XSize, 
-			double ZDist, double YDist, double XDist,
-			long long int Threshold,
-			Mesh& mesh
-		)
+void March(const double * Pixel_Array,
+	const size_t ZSize, const size_t YSize, const size_t XSize,
+	double ZDist, double YDist, double XDist,
+	long long int Threshold,
+	Mesh& mesh
+)
 {
 	size_t xWidth = (XSize);
 	size_t xyWidth = xWidth * (YSize);
 
 	double ZCoor = 0.0, YCoor, XCoor;
 	unordered_map<Coor, size_t, Coor_Hash_Func> verts;
-/*
-	XDist /= 2.0;
-	YDist /= 2.0;
-	ZDist /= 2.0;*/
+	/*
+		XDist /= 2.0;
+		YDist /= 2.0;
+		ZDist /= 2.0;*/
 
-	//#pragma omp parallel for
+		//#pragma omp parallel for
 	for (int z = 0; z < (ZSize - 1); z++)
 	{
 		YCoor = 0.0;
@@ -160,8 +160,8 @@ void March(	const double * Pixel_Array,
 			XCoor = 0.0;
 			for (int x = 0; x < (XSize - 1); x++)
 			{
-				vector<long double> PointValues	{
-													Pixel_Array[z * xyWidth + y * xWidth + x], 
+				vector<long double> PointValues{
+													Pixel_Array[z * xyWidth + y * xWidth + x],
 													Pixel_Array[z * xyWidth + (y + 1) * xWidth + x],
 													Pixel_Array[z * xyWidth + (y + 1) * xWidth + (x + 1)],
 													Pixel_Array[z * xyWidth + y * xWidth + (x + 1)],
@@ -169,7 +169,7 @@ void March(	const double * Pixel_Array,
 													Pixel_Array[(z + 1) * xyWidth + (y + 1) * xWidth + x],
 													Pixel_Array[(z + 1) * xyWidth + (y + 1) * xWidth + x + 1],
 													Pixel_Array[(z + 1) * xyWidth + y * xWidth, (x + 1)]
-												};
+				};
 				/*long double PointValue[] =	{
 												Pixel_Array[(int) z * xyWidth + (int) (y + 0.5) * xWidth + (int) x],
 												Pixel_Array[(int) z * xyWidth + (int) (y + 0.5) * xWidth + (int) (x + 0.5)],
@@ -217,11 +217,11 @@ void MakeOBJ(const char * name, Mesh & mesh)
 		fprintf(f1, "v %lf %lf %lf\n", mesh.Vertex[i].x, mesh.Vertex[i].y, mesh.Vertex[i].z);
 
 	fprintf(f1, "\n# List of vertex normals\n");
-	for (size_t i = 0; i < mesh.VertexNormal.size(); i++) 
+	for (size_t i = 0; i < mesh.VertexNormal.size(); i++)
 		fprintf(f1, "vn %Lf %Lf %Lf\n", mesh.VertexNormal[i].first.x, mesh.VertexNormal[i].first.y, mesh.VertexNormal[i].first.z);
 
 	fprintf(f1, "\n# Polygonal face element\n");
-	for (size_t i = 0; i < mesh.Faces.size(); i++) 
+	for (size_t i = 0; i < mesh.Faces.size(); i++)
 		fprintf(f1, "f %lld//%lld %lld//%lld %lld//%lld\n", mesh.Faces[i][0], mesh.Faces[i][0], mesh.Faces[i][1], mesh.Faces[i][1], mesh.Faces[i][2], mesh.Faces[i][2]);
 
 	fclose(f1);

@@ -12,35 +12,35 @@ void ConvertHu(py::array_t<double> pixel_array, const double slope, const double
 
 	double *Voxel = (double *)rA.ptr;
 
-	#pragma omp parallel for
+#pragma omp parallel for
 	for (int i = 0; i < (rA.shape[0] * rA.shape[1] * rA.shape[2]); i++)
 		Voxel[i] = (Voxel[i] * slope) + intercept;
 }
 
 void
-MarchingCube(	py::array_t<double> pixel_array, 
-				const double ZDist, const double YDist, const double XDist, 
-				const long long int trs,
-				const char * name
-			)
+MarchingCube(py::array_t<double> pixel_array,
+	const double ZDist, const double YDist, const double XDist,
+	const long long int trs,
+	const char * name
+)
 {
 	auto rA = pixel_array.request();
 	Mesh mesh;
-	March((double *) rA.ptr, rA.shape[0], rA.shape[1], rA.shape[2], ZDist, YDist, XDist, trs, mesh);
+	March((double *)rA.ptr, rA.shape[0], rA.shape[1], rA.shape[2], ZDist, YDist, XDist, trs, mesh);
 	/*cout << "Smoothing Start" << endl;
 	Smoothing(mesh, 2);*/
 	cout << "Make OBJ Start" << endl;
 	MakeOBJ(name, mesh);
 }
 
-void 
+void
 Coba(const char* name)
 {
 	Coor A = { 1.0, 2.0, 3.0 };
 
 }
 
-PYBIND11_MODULE(MarchingCubeCpp, m) 
+PYBIND11_MODULE(MarchingCubeCpp, m)
 {
 	/*py::class_<Coor>(m, "Coor")
 		.def_readwrite("x", &Coor::x)
