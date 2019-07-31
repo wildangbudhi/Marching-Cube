@@ -134,12 +134,12 @@ void Polygonise(vector<long double>& PointValues, double x1, double y1, double z
 
 }
 
-void March(const double * Pixel_Array,
-	const size_t ZSize, const size_t YSize, const size_t XSize,
-	double ZDist, double YDist, double XDist,
-	long long int Threshold,
-	Mesh& mesh
-)
+void March(	const double * Pixel_Array,
+			const size_t ZSize, const size_t YSize, const size_t XSize,
+			double ZDist, double YDist, double XDist,
+			long long int Threshold,
+			Mesh& mesh
+		)
 {
 	size_t xWidth = (XSize);
 	size_t xyWidth = xWidth * (YSize);
@@ -149,7 +149,7 @@ void March(const double * Pixel_Array,
 	/*
 		XDist /= 2.0;
 		YDist /= 2.0;
-		ZDist /= 2.0;*/
+		ZDist /= 2.0;	*/
 
 		//#pragma omp parallel for
 	for (int z = 0; z < (ZSize - 1); z++)
@@ -169,7 +169,7 @@ void March(const double * Pixel_Array,
 													Pixel_Array[(z + 1) * xyWidth + (y + 1) * xWidth + x],
 													Pixel_Array[(z + 1) * xyWidth + (y + 1) * xWidth + x + 1],
 													Pixel_Array[(z + 1) * xyWidth + y * xWidth, (x + 1)]
-				};
+												};
 				/*long double PointValue[] =	{
 												Pixel_Array[(int) z * xyWidth + (int) (y + 0.5) * xWidth + (int) x],
 												Pixel_Array[(int) z * xyWidth + (int) (y + 0.5) * xWidth + (int) (x + 0.5)],
