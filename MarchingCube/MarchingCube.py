@@ -29,9 +29,9 @@ def Make3D(DicomSeriesPath: str, DicomType: str, Threshold: int = 400):
 	print("Sukses:", time() - start)
 
 def main():
-	Make3D("D:/Python/3D Brain/Editing Code/NEW2/", "CT Scan", Threshold=400)
-	#Make3D("D:/Python/3D Brain/Editing Code/Azis/Azis MRI/A/", "MRI", Threshold=400)
-	#Make3D("D:/Python/3D Brain/Editing Code/Azis/Azis MRA & DTI/501/", "MRA", Threshold=1000)
+	Make3D("D:/Python/3D Brain/Editing Code/Azis/Azis CT Scan/A/", "CT Scan", Threshold=400)
+	Make3D("D:/Python/3D Brain/Editing Code/Azis/Azis MRI/A/", "MRI", Threshold=400)
+	Make3D("D:/Python/3D Brain/Editing Code/Azis/Azis MRA & DTI/501/", "MRA", Threshold=1000)
 
 if __name__ == "__main__":
 	main()

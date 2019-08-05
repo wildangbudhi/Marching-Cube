@@ -11,14 +11,14 @@ long double GetValueFromTrilinearInterpolation(Coor V, long double V0[])
 				V110 x y(1 - z) +
 				V111 x y z		*/
 
-	return 	(V0[0] * (1 - V.x) * (1 - V.y) * (1 - V.z)) +
-			(V0[1] * V.x * (1 - V.y) * (1 - V.z)) +
-			(V0[2] * (1 - V.x) * V.y *(1 - V.z)) +
-			(V0[3] * (1 - V.x) * (1 - V.y) * V.z) +
-			(V0[4] * V.x * (1 - V.y) * V.z) +
-			(V0[5] * (1 - V.x) * V.y * V.z) +
-			(V0[6] * V.x * V.y *(1 - V.z)) +
-			(V0[7] * V.x * V.y * V.z);
+	return 	(	(V0[0] * (1.0 - V.x) * (1.0 - V.y) * (1.0 - V.z)) +
+				(V0[1] * V.x * (1.0 - V.y) * (1.0 - V.z)) +
+				(V0[2] * (1.0 - V.x) * V.y *(1.0 - V.z)) +
+				(V0[3] * (1.0 - V.x) * (1.0 - V.y) * V.z) +
+				(V0[4] * V.x * (1.0 - V.y) * V.z) +
+				(V0[5] * (1.0 - V.x) * V.y * V.z) +
+				(V0[6] * V.x * V.y *(1.0 - V.z)) +
+				(V0[7] * V.x * V.y * V.z)							);
 
 }
 
@@ -146,11 +146,11 @@ void March(	const double * Pixel_Array,
 
 	double ZCoor = 0.0, YCoor, XCoor;
 	unordered_map<Coor, size_t, Coor_Hash_Func> verts;
-	/*
-		XDist /= 2.0;
+	
+		/*XDist /= 2.0;
 		YDist /= 2.0;
-		ZDist /= 2.0;	*/
-
+		ZDist /= 2.0;	
+*/
 		//#pragma omp parallel for
 	for (int z = 0; z < (ZSize - 1); z++)
 	{
@@ -170,15 +170,29 @@ void March(	const double * Pixel_Array,
 													Pixel_Array[(z + 1) * xyWidth + (y + 1) * xWidth + x + 1],
 													Pixel_Array[(z + 1) * xyWidth + y * xWidth, (x + 1)]
 												};
+
+				//size_t X = (size_t)floor(x), Y = (size_t)floor(y), Z = (size_t)floor(z);
+
 				/*long double PointValue[] =	{
-												Pixel_Array[(int) z * xyWidth + (int) (y + 0.5) * xWidth + (int) x],
-												Pixel_Array[(int) z * xyWidth + (int) (y + 0.5) * xWidth + (int) (x + 0.5)],
-												Pixel_Array[(int) (z + 0.5) * xyWidth + (int) (y + 0.5) * xWidth + (int) x],
-												Pixel_Array[(int) z * xyWidth + (int) y * xWidth + (int) x],
-												Pixel_Array[(int) z * xyWidth + (int) y * xWidth + (int) (x + 0.5)],
-												Pixel_Array[(int) z * xyWidth + (int) (y + 0.5) * xWidth + (int) x],
-												Pixel_Array[(int) (z + 0.5) * xyWidth + (int) (y + 0.5) * xWidth + (int) (x + 0.5)],
-												Pixel_Array[(int) (z + 0.5) * xyWidth + (int) y * xWidth, (int) (x + 0.5)]
+												Pixel_Array[Z * xyWidth + nextY * xWidth + X],
+												Pixel_Array[Z * xyWidth + nextY * xWidth + nextX],
+												Pixel_Array[nextZ * xyWidth + nextY * xWidth + X],
+												Pixel_Array[Z * xyWidth + Y * xWidth + X],
+												Pixel_Array[Z * xyWidth + Y * xWidth + nextX],
+												Pixel_Array[Z * xyWidth + nextY * xWidth + X],
+												Pixel_Array[nextZ * xyWidth + nextY * xWidth + nextX],
+												Pixel_Array[nextZ * xyWidth + Y * xWidth, nextX]
+											};*/
+
+				/*long double PointValue[] =	{
+												Pixel_Array[Z * xyWidth + Y * xWidth + X],
+												Pixel_Array[Z * xyWidth + Y * xWidth + (X + 1)],
+												Pixel_Array[Z * xyWidth + (Y + 1) * xWidth + X],
+												Pixel_Array[(Z + 1) * xyWidth + Y * xWidth + X],
+												Pixel_Array[(Z + 1) * xyWidth + Y * xWidth + (X + 1)],
+												Pixel_Array[(Z + 1) * xyWidth + (Y + 1) * xWidth + X],
+												Pixel_Array[Z * xyWidth + (Y + 1) * xWidth + (X + 1)],
+												Pixel_Array[(Z + 1) * xyWidth + (Y + 1) * xWidth + (X + 1)],
 											};
 
 				vector<long double> PointValues	{

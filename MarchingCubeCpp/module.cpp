@@ -36,8 +36,7 @@ MarchingCube(py::array_t<double> pixel_array,
 void
 Coba(const char* name)
 {
-	Coor A = { 1.0, 2.0, 3.0 };
-
+	printf("hahahh");
 }
 
 PYBIND11_MODULE(MarchingCubeCpp, m)
