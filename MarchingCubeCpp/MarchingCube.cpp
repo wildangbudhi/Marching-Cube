@@ -24,6 +24,7 @@ void Polygonise(vector<long double>& PointValues, double x1, double y1, double z
 
 	for (int i = 0; i < PointValues.size(); shifter <<= 1, i++)
 		if (PointValues[i] < Threshold) cubeIndex |= shifter;
+		//if (PointValues[i] > 0.0) cubeIndex |= shifter;
 
 	if (EDGE_TABLE[cubeIndex] == 0) return;
 
@@ -138,13 +139,14 @@ void March(	const double * Pixel_Array,
 
 	double ZCoor = 0.0, YCoor, XCoor;
 	
-		//#pragma omp parallel for
+	
 	for (int z = 0; z < (ZSize - 1); z++)
 	{
 		YCoor = 0.0;
 		for (int y = 0; y < (YSize - 1); y++)
 		{
 			XCoor = 0.0;
+			//#pragma omp parallel for
 			for (int x = 0; x < (XSize - 1); x++)
 			{
 				vector<long double> PointValues	{

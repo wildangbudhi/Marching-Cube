@@ -38,7 +38,6 @@ struct Mesh
 	vector<pair<Coor, size_t> > VertexNormal;
 	vector<vector<size_t> > Faces;
 	FILE *vCache, *vnCache, *fCache;
-	bool flag1, flag2, flag3;
 
 	size_t push_Vertex(const Coor key, const size_t val)
 	{
