@@ -1,9 +1,7 @@
 #include "Header.h"
 
-long double GetValueFromTrilinearInterpolation(Coor V, long double V0[]);
-void VertexInterp(size_t Threshold, Coor p1, Coor p2, double pv1, double pv2, size_t resultIndex, vector<Coor> &result);
-void CalculateNormal(Mesh &mesh);
-void Polygonise(vector<long double>& PointValues, double x1, double y1, double z1, double x2, double y2, double z2, size_t Threshold, unordered_map<Coor, size_t, Coor_Hash_Func>& verts, Mesh& mesh);
+void VertexInterp(size_t Threshold, Coor p1, Coor p2, long double pv1, long double pv2, size_t resultIndex, vector<Coor> &result);
+void Polygonise(vector<long double>& PointValues, double x1, double y1, double z1, double x2, double y2, double z2, size_t Threshold, Mesh& mesh);
 void March(const double * Pixel_Array,
 	const size_t ZSize,
 	const size_t YSize,
@@ -14,4 +12,4 @@ void March(const double * Pixel_Array,
 	long long int Threshold,
 	Mesh& mesh
 );
-void MakeOBJ(const char *name, Mesh& mesh);
+size_t MakeOBJ(const char *name, Mesh & mesh);

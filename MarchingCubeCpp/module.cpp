@@ -2,7 +2,7 @@
 #include <pybind11/stl.h>
 #include <pybind11/numpy.h>
 #include "MarchingCube.h"
-#include "Laplacian_Smoothing.h"
+//#include "Laplacian_Smoothing.h"
 
 namespace py = pybind11;
 
@@ -19,18 +19,28 @@ void ConvertHu(py::array_t<double> pixel_array, const double slope, const double
 
 void
 MarchingCube(py::array_t<double> pixel_array,
+	const size_t ZSize, const size_t YSize, const size_t XSize,
 	const double ZDist, const double YDist, const double XDist,
 	const long long int trs,
 	const char * name
 )
 {
 	auto rA = pixel_array.request();
+	/*double *Pixel_Array = (double *) rA.ptr;
+
+	int x = 0, y = 0, z = 0;
+	size_t xWidth = (XSize);
+	size_t xyWidth = xWidth * (YSize); */
+
+	
 	Mesh mesh;
-	March((double *)rA.ptr, rA.shape[0], rA.shape[1], rA.shape[2], ZDist, YDist, XDist, trs, mesh);
+
+	cout << "March Start" << endl;
+	March((double *)rA.ptr, ZSize, YSize, XSize, ZDist, YDist, XDist, trs, mesh);
 	/*cout << "Smoothing Start" << endl;
 	Smoothing(mesh, 2);*/
-	cout << "Make OBJ Start" << endl;
-	MakeOBJ(name, mesh);
+	//cout << "Make OBJ Start " << name << endl;
+	cout << MakeOBJ(name, mesh);
 }
 
 void

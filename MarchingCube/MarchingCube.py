@@ -16,22 +16,28 @@ def Make3D(DicomSeriesPath: str, DicomType: str, Threshold: int = 400):
 	YDist = slices[0].PixelSpacing[0]
 	XDist = slices[0].PixelSpacing[1]
 
+	#pixel_Array =	[
+	#					[ [2000, 100], [2000, 2000] ] ,
+	#					[ [100, 2000], [2000, 2000] ] 
+	#				]
+	#pixel_Array = np.array(pixel_Array, dtype=np.float)
+
 	if(DicomType == "CT Scan"):
 		print("ConvertHu Start")
 		intercept = pixel_Array[0].RescaleIntercept if hasattr(pixel_Array[0], 'RescaleIntercept') else -1024
 		slope = pixel_Array[0].RescaleSlope if hasattr(pixel_Array[0], 'RescaleSlope') else 1
 		ConvertHu(pixel_Array, slope, intercept)
 
-	print("March Start")
+	#print("March Start")
 
 	start = time()
-	MarchingCube(pixel_Array, ZDist, YDist, ZDist, Threshold, DicomType + ".obj")
+	MarchingCube(pixel_Array, pixel_Array.shape[0], pixel_Array.shape[1], pixel_Array.shape[2], ZDist, YDist, XDist, Threshold, DicomType + ".obj")
 	print("Sukses:", time() - start)
 
 def main():
-	Make3D("D:/Python/3D Brain/Editing Code/Azis/Azis CT Scan/A/", "CT Scan", Threshold=400)
+	#Make3D("D:/Python/3D Brain/Editing Code/Azis/Azis CT Scan/A/", "CT Scan", Threshold=400)
 	Make3D("D:/Python/3D Brain/Editing Code/Azis/Azis MRI/A/", "MRI", Threshold=400)
-	Make3D("D:/Python/3D Brain/Editing Code/Azis/Azis MRA & DTI/501/", "MRA", Threshold=1000)
+	#Make3D("D:/Python/3D Brain/Editing Code/Azis/Azis MRA & DTI/501/", "MRA", Threshold=1000)
 
 if __name__ == "__main__":
 	main()
