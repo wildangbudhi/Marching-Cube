@@ -31,14 +31,14 @@ void Polygonise(vector<long double>& PointValues, double x1, double y1, double z
 	vector<Coor> vertlist(12);
 
 	vector<Coor> Point{
-		{x1, y1, z1}, // 0
-		{x1, y2, z1}, // 1
-		{x2, y2, z1}, // 2
-		{x2, y1, z1}, // 3
-		{x1, y1, z2}, // 4
-		{x1, y2, z2}, // 5
-		{x2, y2, z2}, // 6
-		{x2, y1, z2}, // 7
+		{x1, y1, z1},	// 0
+		{x1, y2, z1},	// 1
+		{x2, y2, z1},	// 2
+		{x2, y1, z1},	// 3
+		{x1, y1, z2},	// 4
+		{x1, y2, z2},	// 5
+		{x2, y2, z2},	// 6
+		{x2, y1, z2},	// 7
 	};
 
 	if (EDGE_TABLE[cubeIndex] & 1)		VertexInterp(Threshold, Point[0], Point[1], PointValues[0], PointValues[1], 0, vertlist);
@@ -80,6 +80,17 @@ void Polygonise(vector<long double>& PointValues, double x1, double y1, double z
 		mesh.push_Faces(vector<size_t>{ v[0], v[1], v[2] });
 
 		// Make Faces and Vertex ------------------------------------------------------------
+		
+		// Make Adj List --------------------------------------------------------------------
+
+		for (int i = 0; i < 3; i++)
+		{
+			if ((v[i] - 1) == mesh.Adj.size()) mesh.Adj.push_back(set<size_t>());
+			mesh.Adj[(v[i] - 1)].insert(v[(i + 1) % 3] - 1);
+			mesh.Adj[(v[i] - 1)].insert(v[(i + 2) % 3] - 1);
+		}
+		
+		// Make Adj List --------------------------------------------------------------------
 
 		// CalculateNormal ------------------------------------------------------------------
 

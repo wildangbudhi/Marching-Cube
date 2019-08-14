@@ -18,9 +18,12 @@ struct Coor
 	void normalization()
 	{
 		long double sum = sqrtl((x*x) + (y*y) + (z*z));
-		x /= sum;
-		y /= sum;
-		z /= sum;
+		if (sum > 0.0)
+		{
+			x /= sum;
+			y /= sum;
+			z /= sum;
+		}
 	}
 };
 
@@ -37,6 +40,7 @@ struct Mesh
 	unordered_map<Coor, size_t, Coor_Hash_Func> Vertex;
 	vector<pair<Coor, size_t> > VertexNormal;
 	vector<vector<size_t> > Faces;
+	vector<set<size_t>> Adj;
 	FILE *vCache, *vnCache, *fCache;
 
 	size_t push_Vertex(const Coor key, const size_t val)
