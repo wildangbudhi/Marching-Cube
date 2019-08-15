@@ -71,13 +71,13 @@ void Polygonise(vector<long double>& PointValues, double x1, double y1, double z
 			else
 			{
 				v[j] = mesh.Vertex.size() + 1;
-				//mesh.Vertex[vertlist[TRIANGLE_TABLE[cubeIndex][i + j]]] = v[j];
-				mesh.push_Vertex(vertlist[TRIANGLE_TABLE[cubeIndex][i + j]], v[j]);
+				mesh.Vertex[vertlist[TRIANGLE_TABLE[cubeIndex][i + j]]] = v[j];
+				//mesh.push_Vertex(vertlist[TRIANGLE_TABLE[cubeIndex][i + j]], v[j]);
 				mesh.VertexNormal.push_back({ { 0,0,1 } , 0 });
 			}
 		}
-		//mesh.Faces.push_back(vector<size_t>{ v[0], v[1], v[2] });
-		mesh.push_Faces(vector<size_t>{ v[0], v[1], v[2] });
+		mesh.Faces.push_back(vector<size_t>{ v[0], v[1], v[2] });
+		//mesh.push_Faces(vector<size_t>{ v[0], v[1], v[2] });
 
 		// Make Faces and Vertex ------------------------------------------------------------
 		
@@ -115,8 +115,8 @@ void Polygonise(vector<long double>& PointValues, double x1, double y1, double z
 		{
 			size_t SizeTemp;
 			if ((SizeTemp = mesh.VertexNormal[v[j] - 1].second) == 0)
-				//mesh.VertexNormal[v[j] - 1] = { N, SizeTemp + 1 };
-				mesh.insert_VertexNormal(v[j] - 1, N, SizeTemp + 1);
+				mesh.VertexNormal[v[j] - 1] = { N, SizeTemp + 1 };
+				//mesh.insert_VertexNormal(v[j] - 1, N, SizeTemp + 1);
 			else
 			{
 				// Mean of Vertex Normal
@@ -129,8 +129,8 @@ void Polygonise(vector<long double>& PointValues, double x1, double y1, double z
 				// Normalization
 				N.normalization();
 
-				//mesh.VertexNormal[v[j] - 1] = { N, SizeTemp + 1 };
-				mesh.insert_VertexNormal(v[j] - 1, N, SizeTemp + 1);
+				mesh.VertexNormal[v[j] - 1] = { N, SizeTemp + 1 };
+				//mesh.insert_VertexNormal(v[j] - 1, N, SizeTemp + 1);
 			}
 		}
 
@@ -184,33 +184,117 @@ void March(	const double * Pixel_Array,
 	mesh.done();
 }
 
+void Smoothing(Mesh & mesh, size_t rounds)
+{
+	vector<Coor> new_verts(mesh.Vertex.size());
+	vector<pair<Coor, size_t> > new_norms(mesh.Vertex.size(), { {0.0, 0.0, 0.0} , 0 });
+
+	cout << "Smoothing Start" << endl;
+
+	for (size_t i = 0; i < rounds; i++)
+	{
+		#pragma omp parallel for
+		for (long long int vert = 0; vert < mesh.newVertex.size(); vert++)
+		{
+			Coor new_vert = mesh.newVertex[vert];
+			Coor new_norm = mesh.VertexNormal[vert].first;
+			auto& neis = mesh.Adj[vert];
+
+			for (auto nei : neis)
+			{
+				new_vert =	{
+								new_vert.x + mesh.newVertex[nei].x,
+								new_vert.y + mesh.newVertex[nei].y,
+								new_vert.z + mesh.newVertex[nei].z,
+							};
+
+				new_norm =	{
+								new_norm.x + mesh.VertexNormal[nei].first.x,
+								new_norm.y + mesh.VertexNormal[nei].first.y,
+								new_norm.z + mesh.VertexNormal[nei].first.z,
+							};
+			}
+
+			new_verts[vert] =	{
+									new_vert.x / (neis.size() + 1),
+									new_vert.y / (neis.size() + 1),
+									new_vert.z / (neis.size() + 1),
+								};
+			
+			new_norms[vert].first = {
+										new_norm.x / (neis.size() + 1),
+										new_norm.y / (neis.size() + 1),
+										new_norm.z / (neis.size() + 1),
+									};
+		}
+
+		Swap< vector<pair<Coor, size_t> > >(mesh.VertexNormal, new_norms);
+		Swap< vector<Coor> >(mesh.Vertex, new_verts);
+	}
+
+	Swap< vector<pair<Coor, size_t> > >(mesh.VertexNormal, new_norms);
+	Swap< vector<Coor> >(mesh.Vertex, new_verts);
+}
+
+
 size_t MakeOBJ(const char * name, Mesh & mesh)
 {
 	cout << "Make OBJ" << endl;
 
-	errno = 0;
+	#pragma omp parallel sections
+	{
+		#pragma omp section
+		{
+			FILE *vCache = fopen("vCache", "w");
+			fprintf(vCache, "\n# List of geometric vertices\n");
+
+			for (auto v : mesh.newVertex)
+				fprintf(vCache, "v %.3Lf %.3Lf %.3Lf\n", v.second.x, v.second.y, v.second.z);
+
+			fclose(vCache);
+		}
+
+		#pragma omp section
+		{
+			FILE *vnCache = fopen("vnCache", "w");
+			fprintf(vnCache, "\n# List of vertex normals\n");
+
+			for (size_t i = 0; i < mesh.VertexNormal.size(); i++)
+				fprintf(vnCache, "vn %.3Lf %.3Lf %.3Lf\n", mesh.VertexNormal[i].first.x, mesh.VertexNormal[i].first.y, mesh.VertexNormal[i].first.z);
+
+			fclose(vnCache);
+		}
+
+		#pragma omp section
+		{
+			FILE *fCache = fopen("fCache", "w");
+			fprintf(fCache, "\n# Polygonal face element\n");
+
+			for (size_t i = 0; i < mesh.Faces.size(); i++)
+				fprintf(fCache, "f %lld//%lld %lld//%lld %lld//%lld\n", mesh.Faces[i][0], mesh.Faces[i][0], mesh.Faces[i][1], mesh.Faces[i][1], mesh.Faces[i][2], mesh.Faces[i][2]);
+
+			fclose(fCache);
+		}
+	}
+
+	#pragma omp barrier
 
 	ofstream Obj(name);
+	Obj << "# OBJ from MarchigCube by 3D BAMAG" << endl;
 
-	ifstream Vertex("vCache");
-	Obj << Vertex.rdbuf();
-	Vertex.close();
+	ifstream vCache("vCache");
+	Obj << vCache.rdbuf() << endl;
+	vCache.close();
 
-	// Write Vertex Normal
-	ifstream VertexNormal("vnCache");
-	Obj << VertexNormal.rdbuf();
-	VertexNormal.close();
-	
-	// Write Faces
-	ifstream Faces("fCache");
-	Obj << Faces.rdbuf();
-	Faces.close();
+	ifstream vnCache("vnCache");
+	Obj << vnCache.rdbuf() << endl;
+	vnCache.close();
+
+	ifstream fCache("fCache");
+	Obj << fCache.rdbuf() << endl;
+	fCache.close();
 
 	Obj.close();
-
-	remove("vCache");
-	remove("fCache");
-	remove("vnCache");
 
 	return (size_t)errno;
 }

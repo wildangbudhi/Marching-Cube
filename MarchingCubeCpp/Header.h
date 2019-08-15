@@ -15,15 +15,14 @@ struct Coor
 {
 	long double x, y, z;
 	bool operator==(const Coor& p) const { return (x == p.x) && (y == p.y) && (z == p.z); }
+	/*Coor operator+=(const Coor& p) const { return { x + p.x, y + p.y, z + p.z }; }
+	Coor operator-=(const Coor& p) const { return { x - p.x, y - p.y, z - p.z }; }
+	Coor operator*=(const Coor& p) const { return { x * p.x, y * p.y, z * p.z }; }
+	Coor operator/=(const Coor& p) const { return { x / p.x, y / p.y, z / p.z }; }*/
 	void normalization()
 	{
 		long double sum = sqrtl((x*x) + (y*y) + (z*z));
-		if (sum > 0.0)
-		{
-			x /= sum;
-			y /= sum;
-			z /= sum;
-		}
+		if (sum > 0.0) {	x /= sum; y /= sum;	z /= sum;	}
 	}
 };
 
@@ -41,60 +40,19 @@ struct Mesh
 	vector<pair<Coor, size_t> > VertexNormal;
 	vector<vector<size_t> > Faces;
 	vector<set<size_t>> Adj;
-	FILE *vCache, *vnCache, *fCache;
-
-	size_t push_Vertex(const Coor key, const size_t val)
-	{
-		errno = 0;
-
-		if (!Vertex.size())
-		{
-			vCache = fopen("vCache", "w");
-			fprintf(vCache, "\n# List of geometric vertices\n");
-		}
-		fprintf(vCache, "v %.3Lf %.3Lf %.3Lf\n", key.x, key.y, key.z);
-		Vertex[key] = val;
-
-		return (size_t)errno;
-	}
-
-	size_t insert_VertexNormal(const size_t idx, const Coor N, const size_t size)
-	{
-		errno = 0;
-
-		if (VertexNormal.size() <= 3)
-		{
-			vnCache = fopen("vnCache", "w");
-			fprintf(vnCache, "\n# List of vertex normals\n");
-		}
-		fprintf(vnCache, "vn %.3Lf %.3Lf %.3Lf\n", N.x, N.y, N.z);
-		VertexNormal[idx] = { N, size };
-
-		return (size_t)errno;
-	}
-
-	size_t push_Faces(vector<size_t> f)
-	{
-		errno = 0;
-
-		if (!Faces.size())
-		{
-			fCache = fopen("fCache", "w");
-			fprintf(fCache, "\n# Polygonal face element\n");
-		}
-		fprintf(fCache, "f %lld//%lld %lld//%lld %lld//%lld\n", f[0], f[0], f[1], f[1], f[2], f[2]);
-		Faces.push_back(f);
-
-		return (size_t)errno;
-	}
+	map<size_t, Coor> newVertex;
 
 	void done()
 	{
-		fclose(vCache);
-		fclose(vnCache);
-		fclose(fCache);
+		for (auto v : Vertex) newVertex[v.second] = v.first;
 		Vertex.clear();
-		VertexNormal.clear();
-		Faces.clear();
 	}
 };
+
+template<typename T>
+void Swap(T& a, T&b)
+{
+	T tmp = a;
+	a = b;
+	b = tmp;
+}
