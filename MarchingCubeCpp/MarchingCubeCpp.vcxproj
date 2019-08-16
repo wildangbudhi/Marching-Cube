@@ -137,13 +137,11 @@
     </CudaLink>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="Laplacian_Smoothing.cpp" />
     <ClCompile Include="MarchingCube.cpp" />
     <ClCompile Include="module.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Header.h" />
-    <ClInclude Include="Laplacian_Smoothing.h" />
     <ClInclude Include="MarchingCube.h" />
     <ClInclude Include="Table.h" />
   </ItemGroup>

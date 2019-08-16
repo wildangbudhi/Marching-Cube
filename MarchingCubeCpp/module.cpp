@@ -20,7 +20,8 @@ void
 MarchingCube(py::array_t<double> pixel_array,
 	const size_t ZSize, const size_t YSize, const size_t XSize,
 	const double ZDist, const double YDist, const double XDist,
-	const long long int trs,
+	const size_t trs,
+	const size_t roundFactor,
 	const char * name
 )
 {
@@ -30,10 +31,8 @@ MarchingCube(py::array_t<double> pixel_array,
 	cout << "March Start" << endl;
 	March((double *)rA.ptr, ZSize, YSize, XSize, ZDist, YDist, XDist, trs, mesh);
 
-	/*cout << "Smoothing Start" << endl;
-	Smoothing(mesh, 2);*/
-	//cout << "Make OBJ Start " << name << endl;
-	//cout << MakeOBJ(name, mesh);
+	Smoothing(mesh, roundFactor);
+	MakeOBJ(name, mesh);
 }
 
 void
