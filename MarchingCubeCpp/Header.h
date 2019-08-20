@@ -37,22 +37,6 @@ struct Mesh
 	vector<vector<size_t> > Faces;
 	vector<set<size_t>> Adj;
 	map<size_t, Coor> newVertex;
-	FILE *fCache;
-
-	size_t push_Faces(vector<size_t> f)
-	{
-		errno = 0;
-
-		if (!Faces.size())
-		{
-			fCache = fopen("fCache", "w");
-			fprintf(fCache, "\n# Polygonal face element\n");
-		}
-		fprintf(fCache, "f %lld//%lld %lld//%lld %lld//%lld\n", f[0], f[0], f[1], f[1], f[2], f[2]);
-		Faces.push_back(f);
-
-		return (size_t)errno;
-	}
 
 	void done()
 	{
@@ -61,8 +45,6 @@ struct Mesh
 			newVertex[it->second - 1] = it->first;
 			it = Vertex.erase(it);
 		}
-		fclose(fCache);
-		Faces.clear();
 	}
 
 	void remove()

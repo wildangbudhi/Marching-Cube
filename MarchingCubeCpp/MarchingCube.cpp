@@ -94,8 +94,8 @@ void March(	const double * Pixel_Array,
 								mesh.VertexNormal.push_back({ { 0,0,1 } , 0 });
 							}
 						}
-						mesh.push_Faces(vector<size_t>{ v[0], v[1], v[2] });
-						//mesh.Faces.push_back(vector<size_t>{ v[0], v[1], v[2] });
+						//mesh.push_Faces(vector<size_t>{ v[0], v[1], v[2] });
+						mesh.Faces.push_back(vector<size_t>{ v[0], v[1], v[2] });
 
 						// Make Faces and Vertex ------------------------------------------------------------
 
@@ -220,7 +220,7 @@ void Smoothing(Mesh & mesh, size_t rounds)
 }
 
 
-size_t MakeOBJ(const char * name, Mesh & mesh)
+size_t MakeOBJ(const char * name, Mesh & mesh, bool isDoubleSided)
 {
 	cout << "Make OBJ" << endl;
 
@@ -250,7 +250,7 @@ size_t MakeOBJ(const char * name, Mesh & mesh)
 			fclose(vnCache);
 		}
 
-		/*#pragma omp section
+		#pragma omp section
 		{
 			FILE *fCache = fopen("fCache", "w");
 			fprintf(fCache, "\n# Polygonal face element\n");
@@ -259,7 +259,31 @@ size_t MakeOBJ(const char * name, Mesh & mesh)
 				fprintf(fCache, "f %lld//%lld %lld//%lld %lld//%lld\n", mesh.Faces[i][0], mesh.Faces[i][0], mesh.Faces[i][1], mesh.Faces[i][1], mesh.Faces[i][2], mesh.Faces[i][2]);
 
 			fclose(fCache);
-		}*/
+		}
+	}
+
+	#pragma omp barrier
+
+	#pragma omp parallel sections
+	{
+		#pragma omp section
+		{
+			FILE *vnCache = fopen("vnCache", "a");
+			for (size_t i = 0; i < mesh.VertexNormal.size(); i++)
+				fprintf(vnCache, "vn %.3Lf %.3Lf %.3Lf\n", -mesh.VertexNormal[i].first.x, -mesh.VertexNormal[i].first.y, -mesh.VertexNormal[i].first.z);
+			fclose(vnCache);
+		}
+
+		#pragma omp section
+		{
+			size_t size_Vn = mesh.VertexNormal.size() - 1;
+			FILE *fCache = fopen("fCache", "w");
+			for (size_t i = 0; i < mesh.Faces.size(); i++)
+				fprintf(fCache, "f %lld//%lld %lld//%lld %lld//%lld\n", mesh.Faces[i][0], size_Vn + mesh.Faces[i][0], 
+																		mesh.Faces[i][1], size_Vn + mesh.Faces[i][1], 
+																		mesh.Faces[i][2], size_Vn + mesh.Faces[i][2]);
+			fclose(fCache);
+		}
 	}
 
 	#pragma omp barrier
