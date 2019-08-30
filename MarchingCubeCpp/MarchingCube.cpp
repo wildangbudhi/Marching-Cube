@@ -94,7 +94,6 @@ void March(	const double * Pixel_Array,
 								mesh.VertexNormal.push_back({ { 0,0,1 } , 0 });
 							}
 						}
-						//mesh.push_Faces(vector<size_t>{ v[0], v[1], v[2] });
 						mesh.Faces.push_back(vector<size_t>{ v[0], v[1], v[2] });
 
 						// Make Faces and Vertex ------------------------------------------------------------
@@ -138,9 +137,9 @@ void March(	const double * Pixel_Array,
 							{
 								// Mean of Vertex Normal
 								Coor temp = mesh.VertexNormal[v[j] - 1].first;
-								N = { ((SizeTemp * temp.x) + (N.x)) / (SizeTemp + 1)	,
-										((SizeTemp * temp.y) + (N.y)) / (SizeTemp + 1)	,
-										((SizeTemp * temp.z) + (N.z)) / (SizeTemp + 1)
+								N = {	((SizeTemp * temp.x) + (N.x)) / (long double) (SizeTemp + 1)	,
+										((SizeTemp * temp.y) + (N.y)) / (long double) (SizeTemp + 1)	,
+										((SizeTemp * temp.z) + (N.z)) / (long double) (SizeTemp + 1)
 								};
 
 								// Normalization
@@ -197,15 +196,15 @@ void Smoothing(Mesh & mesh, size_t rounds)
 			}
 
 			new_verts[vert] =	{
-									new_vert.x / (neis.size() + 1),
-									new_vert.y / (neis.size() + 1),
-									new_vert.z / (neis.size() + 1),
+									new_vert.x / (long double) (neis.size() + 1),
+									new_vert.y / (long double) (neis.size() + 1),
+									new_vert.z / (long double) (neis.size() + 1),
 								};
 			
 			new_norms[vert].first = {
-										new_norm.x / (neis.size() + 1),
-										new_norm.y / (neis.size() + 1),
-										new_norm.z / (neis.size() + 1),
+										new_norm.x / (long double) (neis.size() + 1),
+										new_norm.y / (long double) (neis.size() + 1),
+										new_norm.z / (long double) (neis.size() + 1),
 									};
 		}
 
@@ -215,8 +214,6 @@ void Smoothing(Mesh & mesh, size_t rounds)
 
 	Swap< vector<pair<Coor, size_t> > >(mesh.VertexNormal, new_norms);
 	Swap< map<size_t, Coor> >(mesh.newVertex, new_verts);
-	mesh.VertexNormal = new_norms;
-	mesh.newVertex = new_verts;
 }
 
 
@@ -264,29 +261,37 @@ size_t MakeOBJ(const char * name, Mesh & mesh, bool isDoubleSided)
 
 	#pragma omp barrier
 
-	#pragma omp parallel sections
+	if (isDoubleSided)
 	{
-		#pragma omp section
+		#pragma omp parallel sections
 		{
-			FILE *vnCache = fopen("vnCache", "a");
-			for (size_t i = 0; i < mesh.VertexNormal.size(); i++)
-				fprintf(vnCache, "vn %.3Lf %.3Lf %.3Lf\n", -mesh.VertexNormal[i].first.x, -mesh.VertexNormal[i].first.y, -mesh.VertexNormal[i].first.z);
-			fclose(vnCache);
+			#pragma omp section
+			{
+				FILE *vnCache = fopen("vnCache", "a");
+				for (size_t i = 0; i < mesh.VertexNormal.size(); i++)
+					fprintf(vnCache, "vn %.3Lf %.3Lf %.3Lf\n", -mesh.VertexNormal[i].first.x, -mesh.VertexNormal[i].first.y, -mesh.VertexNormal[i].first.z);
+				fclose(vnCache);
+			}
+
+			#pragma omp section
+			{
+				size_t size_Vn = mesh.VertexNormal.size() - 1;
+				FILE *fCache = fopen("fCache", "a");
+				for (size_t i = 0; i < mesh.Faces.size(); i++)
+					fprintf(fCache, "f %lld//%lld %lld//%lld %lld//%lld\n", mesh.Faces[i][0], size_Vn + mesh.Faces[i][0],
+																			mesh.Faces[i][1], size_Vn + mesh.Faces[i][1],
+																			mesh.Faces[i][2], size_Vn + mesh.Faces[i][2]);
+				fclose(fCache);
+			}
 		}
 
-		#pragma omp section
-		{
-			size_t size_Vn = mesh.VertexNormal.size() - 1;
-			FILE *fCache = fopen("fCache", "w");
-			for (size_t i = 0; i < mesh.Faces.size(); i++)
-				fprintf(fCache, "f %lld//%lld %lld//%lld %lld//%lld\n", mesh.Faces[i][0], size_Vn + mesh.Faces[i][0], 
-																		mesh.Faces[i][1], size_Vn + mesh.Faces[i][1], 
-																		mesh.Faces[i][2], size_Vn + mesh.Faces[i][2]);
-			fclose(fCache);
-		}
+		#pragma omp barrier
+
 	}
 
-	#pragma omp barrier
+
+	/*uvs[i] = new Vector2(0.5f + (verts[i].x - centerX) / (2 * radius),
+		0.5f + (verts[i].y - centerY) / (2 * radius));*/
 
 	mesh.remove();
 
