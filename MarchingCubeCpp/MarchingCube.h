@@ -7,4 +7,4 @@ void March(	const double * Pixel_Array,
 			Mesh& mesh
 		);
 void Smoothing(Mesh & mesh, size_t rounds);
-size_t MakeOBJ(const char *name, Mesh & mesh, bool isDoubleSided);
+size_t MakeOBJ(const char *name, Mesh & mesh, bool isDoubleSided, bool writeUVs);

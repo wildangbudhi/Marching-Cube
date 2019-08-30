@@ -22,7 +22,7 @@ def Make3D(DicomSeriesPath: str, DicomType: str, Threshold: int = 400):
 		ConvertHu(pixel_Array, slope, intercept)
 
 	start = time()
-	MarchingCube(pixel_Array, pixel_Array.shape[0], pixel_Array.shape[1], pixel_Array.shape[2], ZDist, YDist, XDist, Threshold, 4, DicomType + ".obj", False)
+	MarchingCube(pixel_Array, pixel_Array.shape[0], pixel_Array.shape[1], pixel_Array.shape[2], ZDist, YDist, XDist, Threshold, 2, DicomType + " DoubleSided + UVs" + ".obj", True, True)
 	print("Sukses:", time() - start)
 
 def main():

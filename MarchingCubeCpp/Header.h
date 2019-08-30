@@ -15,9 +15,15 @@ struct Coor
 {
 	long double x, y, z;
 	bool operator==(const Coor& p) const { return (x == p.x) && (y == p.y) && (z == p.z); }
+
+	long double Longitude()
+	{
+		return sqrtl((x*x) + (y*y) + (z*z));
+	}
+
 	void normalization()
 	{
-		long double sum = sqrtl((x*x) + (y*y) + (z*z));
+		long double sum = this->Longitude();
 		if (sum > 0.0) {	x /= sum; y /= sum;	z /= sum;	}
 	}
 };

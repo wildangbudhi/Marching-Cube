@@ -22,7 +22,8 @@ MarchingCube(py::array_t<double> pixel_array,
 	const size_t trs,
 	const size_t roundFactor,
 	const char * name,
-	bool isDoubleSided = false
+	bool isDoubleSided = false,
+	bool writeUVs = false
 )
 {
 	auto rA = pixel_array.request();
@@ -32,7 +33,7 @@ MarchingCube(py::array_t<double> pixel_array,
 	March((double *)rA.ptr, ZSize, YSize, XSize, ZDist, YDist, XDist, trs, mesh);
 
 	Smoothing(mesh, roundFactor);
-	MakeOBJ(name, mesh, isDoubleSided);
+	MakeOBJ(name, mesh, isDoubleSided, writeUVs);
 }
 
 void
@@ -56,6 +57,7 @@ PYBIND11_MODULE(MarchingCubeCpp, m)
 			py::arg("roundFactor"),
 			py::arg("Name"),
 			py::arg("isDoubleSided") = false,
+			py::arg("writeUVs") = false,
 			"Making 3D Object from Series of Pixel Array or Voxel");
 	m.def("ConvertHu", &ConvertHu, "Convert Pixel Array from Gray Scale to Hu Scale");
 	m.def("Coba", &Coba, "Function for Experiment");

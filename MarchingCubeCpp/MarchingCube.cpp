@@ -195,17 +195,21 @@ void Smoothing(Mesh & mesh, size_t rounds)
 							};
 			}
 
-			new_verts[vert] =	{
-									new_vert.x / (long double) (neis.size() + 1),
-									new_vert.y / (long double) (neis.size() + 1),
-									new_vert.z / (long double) (neis.size() + 1),
-								};
-			
-			new_norms[vert].first = {
-										new_norm.x / (long double) (neis.size() + 1),
-										new_norm.y / (long double) (neis.size() + 1),
-										new_norm.z / (long double) (neis.size() + 1),
+			#pragma omp critical 
+			{
+				new_verts[vert] =	{
+										new_vert.x / (long double)(neis.size() + 1),
+										new_vert.y / (long double)(neis.size() + 1),
+										new_vert.z / (long double)(neis.size() + 1),
 									};
+
+				new_norms[vert].first = {
+											new_norm.x / (long double)(neis.size() + 1),
+											new_norm.y / (long double)(neis.size() + 1),
+											new_norm.z / (long double)(neis.size() + 1),
+										};
+			}
+			
 		}
 
 		Swap< vector<pair<Coor, size_t> > >(mesh.VertexNormal, new_norms);
@@ -217,7 +221,7 @@ void Smoothing(Mesh & mesh, size_t rounds)
 }
 
 
-size_t MakeOBJ(const char * name, Mesh & mesh, bool isDoubleSided)
+size_t MakeOBJ(const char * name, Mesh & mesh, bool isDoubleSided, bool writeUVs)
 {
 	cout << "Make OBJ" << endl;
 
@@ -238,6 +242,23 @@ size_t MakeOBJ(const char * name, Mesh & mesh, bool isDoubleSided)
 
 		#pragma omp section
 		{
+			if (writeUVs)
+			{
+				FILE *vtCache = fopen("vtCache", "w");
+				fprintf(vtCache, "\n# List of vertex texture coordinate\n");
+
+				for (size_t i = 0; i < mesh.newVertex.size(); i++)
+				{
+					long double u = (mesh.newVertex[i].x / 2.0) + 0.5, v = (mesh.newVertex[i].y / 2.0) + 0.5;
+					fprintf(vtCache, "vt %.3Lf %.3Lf\n", u, v);
+				}
+					
+				fclose(vtCache);
+			}
+		}
+
+		#pragma omp section
+		{
 			FILE *vnCache = fopen("vnCache", "w");
 			fprintf(vnCache, "\n# List of vertex normals\n");
 
@@ -252,9 +273,21 @@ size_t MakeOBJ(const char * name, Mesh & mesh, bool isDoubleSided)
 			FILE *fCache = fopen("fCache", "w");
 			fprintf(fCache, "\n# Polygonal face element\n");
 
-			for (size_t i = 0; i < mesh.Faces.size(); i++)
-				fprintf(fCache, "f %lld//%lld %lld//%lld %lld//%lld\n", mesh.Faces[i][0], mesh.Faces[i][0], mesh.Faces[i][1], mesh.Faces[i][1], mesh.Faces[i][2], mesh.Faces[i][2]);
-
+			if (writeUVs)
+			{
+				for (size_t i = 0; i < mesh.Faces.size(); i++)
+					fprintf(fCache, "f %lld/%lld/%lld %lld/%lld/%lld %lld/%lld/%lld\n", mesh.Faces[i][0], mesh.Faces[i][0], mesh.Faces[i][0],
+																						mesh.Faces[i][1], mesh.Faces[i][1], mesh.Faces[i][1],
+																						mesh.Faces[i][2], mesh.Faces[i][2], mesh.Faces[i][2]);
+			}
+			else
+			{
+				for (size_t i = 0; i < mesh.Faces.size(); i++)
+					fprintf(fCache, "f %lld//%lld %lld//%lld %lld//%lld\n", mesh.Faces[i][0], mesh.Faces[i][0], 
+																			mesh.Faces[i][1], mesh.Faces[i][1], 
+																			mesh.Faces[i][2], mesh.Faces[i][2]);
+			}
+			
 			fclose(fCache);
 		}
 	}
@@ -269,7 +302,33 @@ size_t MakeOBJ(const char * name, Mesh & mesh, bool isDoubleSided)
 			{
 				FILE *vnCache = fopen("vnCache", "a");
 				for (size_t i = 0; i < mesh.VertexNormal.size(); i++)
-					fprintf(vnCache, "vn %.3Lf %.3Lf %.3Lf\n", -mesh.VertexNormal[i].first.x, -mesh.VertexNormal[i].first.y, -mesh.VertexNormal[i].first.z);
+				{
+					// reverse direction of vector
+					Coor newVN =	{
+										-mesh.VertexNormal[i].first.x,
+										-mesh.VertexNormal[i].first.y,
+										-mesh.VertexNormal[i].first.z
+									};
+
+					long double L = newVN.Longitude();
+
+					// define direction of vector (- / +)
+					Coor dir =	{
+									(newVN.x == 0.0) ? 0.0 : (newVN.x > 0.0) ? 1.0 : -1.0,
+									(newVN.y == 0.0) ? 0.0 : (newVN.y > 0.0) ? 1.0 : -1.0,
+									(newVN.z == 0.0) ? 0.0 : (newVN.z > 0.0) ? 1.0 : -1.0,
+								};
+
+					// move forward vector by Longitude of Vector
+					newVN =	{
+								newVN.x + (dir.x * L),
+								newVN.y + (dir.y * L),
+								newVN.z + (dir.z * L),
+							};
+
+					fprintf(vnCache, "vn %.3Lf %.3Lf %.3Lf\n", newVN.x, newVN.y, newVN.z);
+				}
+					
 				fclose(vnCache);
 			}
 
@@ -277,10 +336,22 @@ size_t MakeOBJ(const char * name, Mesh & mesh, bool isDoubleSided)
 			{
 				size_t size_Vn = mesh.VertexNormal.size() - 1;
 				FILE *fCache = fopen("fCache", "a");
-				for (size_t i = 0; i < mesh.Faces.size(); i++)
-					fprintf(fCache, "f %lld//%lld %lld//%lld %lld//%lld\n", mesh.Faces[i][0], size_Vn + mesh.Faces[i][0],
-																			mesh.Faces[i][1], size_Vn + mesh.Faces[i][1],
-																			mesh.Faces[i][2], size_Vn + mesh.Faces[i][2]);
+
+				if (writeUVs) 
+				{
+					for (size_t i = 0; i < mesh.Faces.size(); i++)
+						fprintf(fCache, "f %lld/%lld/%lld %lld/%lld/%lld %lld/%lld/%lld\n", mesh.Faces[i][0], mesh.Faces[i][0], size_Vn + mesh.Faces[i][0],
+																							mesh.Faces[i][1], mesh.Faces[i][1], size_Vn + mesh.Faces[i][1],
+																							mesh.Faces[i][2], mesh.Faces[i][2], size_Vn + mesh.Faces[i][2]);
+				}
+				else
+				{
+					for (size_t i = 0; i < mesh.Faces.size(); i++)
+						fprintf(fCache, "f %lld//%lld %lld//%lld %lld//%lld\n", mesh.Faces[i][0], size_Vn + mesh.Faces[i][0], 
+																				mesh.Faces[i][1], size_Vn + mesh.Faces[i][1], 
+																				mesh.Faces[i][2], size_Vn + mesh.Faces[i][2]);
+				}
+				
 				fclose(fCache);
 			}
 		}
@@ -288,10 +359,6 @@ size_t MakeOBJ(const char * name, Mesh & mesh, bool isDoubleSided)
 		#pragma omp barrier
 
 	}
-
-
-	/*uvs[i] = new Vector2(0.5f + (verts[i].x - centerX) / (2 * radius),
-		0.5f + (verts[i].y - centerY) / (2 * radius));*/
 
 	mesh.remove();
 
@@ -301,6 +368,13 @@ size_t MakeOBJ(const char * name, Mesh & mesh, bool isDoubleSided)
 	ifstream vCache("vCache");
 	Obj << vCache.rdbuf() << endl;
 	vCache.close();
+
+	if (writeUVs)
+	{
+		ifstream vtCache("vtCache");
+		Obj << vtCache.rdbuf() << endl;
+		vtCache.close();
+	}
 
 	ifstream vnCache("vnCache");
 	Obj << vnCache.rdbuf() << endl;
@@ -313,6 +387,7 @@ size_t MakeOBJ(const char * name, Mesh & mesh, bool isDoubleSided)
 	Obj.close();
 
 	remove("vCache");
+	if (writeUVs) remove("vtCache");
 	remove("vnCache");
 	remove("fCache");
 
